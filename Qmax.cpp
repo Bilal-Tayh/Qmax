@@ -68,9 +68,6 @@ void QMax::insert(int v){
 void QMax::maintenance(){
     int ii=_phi;
 	_phi = findKthLargestAndPivot();
-    if(ii>_phi){
-        std::cout<<"wrong"<<std::endl;
-    }
 	_curIdx = _nminusq;
 }
 

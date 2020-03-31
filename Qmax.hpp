@@ -29,11 +29,6 @@ class QMax
     unsigned int * RandByteArray;
     rng::rng128 gen_arr;
     int counter;
-    int bytecounter;
-    int randArrLen;
-    int bitsNum;
-    int bytesNum;
-    int mask;
     __m256i rand_bits;
 public:
 	void reset();
