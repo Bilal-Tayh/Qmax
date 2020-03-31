@@ -46,13 +46,9 @@ QMax::QMax(int q, float gamma){
     _K=ceil( ((_alpha*_gamma*(2+_gamma - _alpha*_gamma)) / (pow(_gamma -_alpha*_gamma,2))) * log(1/_delta));
     _Z = (int)  ( (_K*(1+_gamma)) / (_alpha*_gamma) );
     gen_arr();
-    rand_bits =_mm256_set_epi64x(gen_arr(), gen_arr(), gen_arr(), gen_arr());
-    RandByteArray=(unsigned char *)&rand_bits;
+    rand_bits = _mm256_set_epi64x(gen_arr(), gen_arr(), gen_arr(), gen_arr());
     counter=0;
-    bytecounter=0;
-    bitsNum = std::floor(log2(_actualsize))+1;
-    bytesNum = std::max((int)ceil((bitsNum-1)/sizeof(int))-1,1);
-    mask = std::pow(2,bitsNum)-1;
+
 }
 void QMax::insert(int v){
 	if (v < _phi){
@@ -105,86 +101,28 @@ int QMax::PartitionAroundPivot(int left, int right, int pivot_idx, int* nums) {
 
 
 
-/*
-int QMax::GenerateRandom(int min,int max){
-  // uniform_real_distribution documentation
-  // http://www.cplusplus.com/reference/random/uniform_real_distribution/
-  std::uniform_real_distribution<double> distribution(0.0,1.0);
-  double u = distribution(_generator);
-  int A = max-min+1;
-  for(int i=0;i<A;i++){
-      if(u<(double)(i+1)/(double)A){
-         return min+i;
-      }
-  }
-  
-  return 0;
-}*/
+
+uint32_t QMax::mm256_extract_epi32_var_indx(int i){   
+        __m128i indx = _mm_cvtsi32_si128(i);
+        __m256i val  = _mm256_permutevar8x32_epi32(rand_bits, _mm256_castsi128_si256(indx));
+        return         _mm_cvtsi128_si32(_mm256_castsi256_si128(val));
+}  
+
+
 
 
 
 
 int QMax::GenerateRandom(int max){
-  int indx = 0;
-  do{
-    
-    if((bytecounter+bytesNum) > 31){
+    int indx = 0;
+    if(counter >= 8){
         rand_bits =_mm256_set_epi64x(gen_arr(), gen_arr(), gen_arr(), gen_arr());
-        RandByteArray=(unsigned char *)&rand_bits;
-        bytecounter=0;
+        counter=0;
     }
-    unsigned int l=0;
-    std::memcpy(&l,&(RandByteArray[bytecounter]),bytesNum);
-    bytecounter += bytesNum;
-    indx = l&mask;
-
-  }while(indx>max);
-
-   return indx;
+    indx = mm256_extract_epi32_var_indx(counter)%max;
+    counter++;
+    return indx;
 }
-
-
-
-/*
-int QMax::GenerateRandom(int max){
-  // uniform_real_distribution documentation
-  // http://www.cplusplus.com/reference/random/uniform_real_distribution/
-//   std::uniform_real_distribution<double> distribution(min,max+1);
-//   double u = distribution(_generator);
-  
-//   return int(u);
-  
-
-  
-  int indx = 0;
-  do{
-    indx = 0;
-    for(int i=0;i<bitsNum;i++){
-        if(((RandByteArray[counter]>>bytecounter)&1)==1){
-            indx*=2;
-            indx+=1;
-        }
-        else{
-            indx*=2;
-        }
-        bytecounter++;
-        if(bytecounter == 8){
-            bytecounter=0;
-            counter++;
-            if(counter==31){
-                __m256i rand_bits =_mm256_set_epi64x(gen_arr(), gen_arr(), gen_arr(), gen_arr());
-                RandByteArray=(unsigned char *)&rand_bits;
-                counter=0;
-            }
-        }
-    }
-  }while(indx>max);
-
-   return indx;
-}
-*/
-
-
 
 
 
@@ -257,8 +195,7 @@ int QMax::findKthLargestAndPivot(){
 //     for(int i=0;i<100;i++){
 //         std::cout<<gen_arr()<<std::endl;
 //     }
-    
-    
+
     int tries=2;
     while(tries!=0){
         // B should contain Z random values from _A

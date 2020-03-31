@@ -26,10 +26,11 @@ class QMax
     double _psi;
     int _K;
     int _Z;
-    unsigned char * RandByteArray;
+    unsigned int * RandByteArray;
     rng::rng128 gen_arr;
     int counter;
     int bytecounter;
+    int randArrLen;
     int bitsNum;
     int bytesNum;
     int mask;
@@ -45,6 +46,7 @@ public:
     int findValueIndex(int value);
     int GenerateRandom(int max);
     int GenerateRandom1(int max);
+    uint32_t mm256_extract_epi32_var_indx(int i);
 };
 #endif
 
