@@ -75,7 +75,6 @@ void QMaxNew::insert(int v){
 
 
 void QMaxNew::maintenance(){
-    int ii=_phi;
 	_phi = findKthLargestAndPivot();
  	_curIdx = 0;
 }
@@ -202,34 +201,26 @@ int QMaxNew::findKthLargestAndPivot(){
     _K=ceil( ((_alpha*_gamma*(2+_gamma - _alpha*_gamma)) / (pow(_gamma -_alpha*_gamma,2))) * log(1/_delta));
     _Z = (int)  ( (_K*(1+_gamma)) / (_alpha*_gamma) );
 
-    int tries=2;
-    while(tries!=0){
-        // B should contain Z random values from _A
-        std::priority_queue <int, std::vector<int>, std::greater<int> > p;
-        for(int i=0;i<_K;i++){
-            int j=GenerateRandom(_actualsize);
-            p.push(_A[j]);
-        }
-        int top = p.top();
-        
-        for(int i=_K;i<_Z;i++){
-            int j=GenerateRandom(_actualsize);
-            if(top<_A[j]){
-                p.pop();
-                p.push(_A[j]);  
-                top = p.top();
-            }
-            
-        }
-    
-        
-        int idx = checkPivot(top);
-        if(idx!=-1){
-            return _A[idx];   
-        }
-        // if the conditions dont hold try sample Z elemnts from _A again...
-        tries--;
+    // B should contain Z random values from _A
+    std::priority_queue <int, std::vector<int>, std::greater<int> > p;
+    for(int i=0;i<_K;i++){
+        int j=GenerateRandom(_actualsize);
+        p.push(_A[j]);
     }
+    int top = p.top();
+    
+    for(int i=_K;i<_Z;i++){
+        int j=GenerateRandom(_actualsize);
+        if(top<_A[j]){
+            p.pop();
+            p.push(_A[j]);  
+            top = p.top();
+        }
+        
+    }
+
+    return top;   
+    
     int left = 0, right = _actualsizeMinusOne;
 	while (left <= right) {
 		int pivot_idx = left;
