@@ -3,7 +3,7 @@ FLAGS = -mavx2 -mavx -std=c++11
 DEBUG_FLAGS = 
 EXEC = graph34 graph5 graph6 graph7 graph8 graph9-in graph10 graph11 hitrate
 # EXEC = graph5 
-REG_OBJ = Heap.o QmaxO.o Qmax.o Skiplist.o
+REG_OBJ = Heap.o QmaxO.o Qmax.o QmaxNew.o Skiplist.o
 KV_OBJ = HeapKV.o QmaxKV.o SkiplistKV.o
 PBA_OBJ = QmaxIn.o HeapIn.o SkiplistIn.o
 OBJS = xxhash.o $(REG_OBJ) $(KV_OBJ) $(PBA_OBJ) SlidingQmax.o
@@ -29,6 +29,9 @@ HeapIn.o: HeapIn.cpp HeapIn.hpp
 	$(CC) -c $(DEBUG_FLAGS) $(FLAGS) $*.cpp
 	
 Qmax.o: Qmax.cpp Qmax.hpp
+	$(CC) -c $(DEBUG_FLAGS) $(FLAGS) $*.cpp
+
+QmaxNew.o: QmaxNew.cpp QmaxNew.hpp
 	$(CC) -c $(DEBUG_FLAGS) $(FLAGS) $*.cpp
 	
 QmaxO.o: QmaxO.cpp QmaxO.hpp

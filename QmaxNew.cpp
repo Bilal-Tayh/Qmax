@@ -1,4 +1,4 @@
-#include "Qmax.hpp"
+#include "QmaxNew.hpp"
 #include <iostream>
 #include <random>
 #include <math.h> 
@@ -21,17 +21,17 @@
 
 
 
-void QMax::print(){
+void QMaxNew::print(){
 	for (int i = 0; i < _actualsize; ++i)
 		std::cout << _A[i] << " ";
 	std::cout << std::endl;
 	std::cout << "_phi  = " << _phi << std::endl;
 }
 
-QMax::QMax(int q, float gamma){
+QMaxNew::QMaxNew(int q, float gamma){
 	_actualsize = q * (1+gamma);
 	_actualsizeMinusOne = _actualsize - 1;
-	_curIdx = _actualsize;
+	_curIdx = 0;
 	_A = (int*) malloc(sizeof(int) * _actualsize);
 	if (!_A)
 		exit(1);
@@ -44,34 +44,43 @@ QMax::QMax(int q, float gamma){
     _alpha=0.35;
     _psi = 2.0/3.0;
     _K=ceil( ((_alpha*_gamma*(2+_gamma - _alpha*_gamma)) / (pow(_gamma -_alpha*_gamma,2))) * log(1/_delta));
-    _Z = (int)  ( (_K*(1+_gamma)) / (_alpha*_gamma) );
+    _Z = (int)  ( (_K*(1+_gamma)) / (_alpha*_gamma));
     gen_arr();
     rand_bits = _mm256_set_epi64x(gen_arr(), gen_arr(), gen_arr(), gen_arr());
     counter=0;
-
 }
-void QMax::insert(int v){
+
+
+
+
+void QMaxNew::insert(int v){
 	if (v < _phi){
 		return;
 	}
 	else{
-		_A[--_curIdx] = v;
-		if (_curIdx){
-			return;
-		}
-		else {
-			maintenance();
-		}
+        while(_A[_curIdx]>=_phi){
+            _curIdx++;
+            if(_curIdx==_actualsize){
+                    maintenance();
+            }
+        }
+        _A[_curIdx] = v;
 	}
 }
 
-void QMax::maintenance(){
+
+
+
+
+
+
+void QMaxNew::maintenance(){
     int ii=_phi;
 	_phi = findKthLargestAndPivot();
-	_curIdx = _nminusq;
+ 	_curIdx = 0;
 }
 
-int* QMax::largestQ(){
+int* QMaxNew::largestQ(){
 	maintenance();
 	return _A + _nminusq;
 }
@@ -81,7 +90,7 @@ inline void swap(int &x, int &y){
 	x = y;
 	y = z;
 }
-int QMax::PartitionAroundPivot(int left, int right, int pivot_idx, int* nums) {
+int QMaxNew::PartitionAroundPivot(int left, int right, int pivot_idx, int* nums) {
 	int pivot_value = nums[pivot_idx];
 	int new_pivot_idx = right;
 	swap(nums[pivot_idx], nums[right]);
@@ -99,7 +108,7 @@ int QMax::PartitionAroundPivot(int left, int right, int pivot_idx, int* nums) {
 
 
 
-uint32_t QMax::mm256_extract_epi32_var_indx(int i){   
+uint32_t QMaxNew::mm256_extract_epi32_var_indx(int i){   
         __m128i indx = _mm_cvtsi32_si128(i);
         __m256i val  = _mm256_permutevar8x32_epi32(rand_bits, _mm256_castsi128_si256(indx));
         return         _mm_cvtsi128_si32(_mm256_castsi256_si128(val));
@@ -110,7 +119,7 @@ uint32_t QMax::mm256_extract_epi32_var_indx(int i){
 
 
 
-int QMax::GenerateRandom(int max){
+int QMaxNew::GenerateRandom(int max){
     int indx = 0;
     if(counter >= 8){
         rand_bits =_mm256_set_epi64x(gen_arr(), gen_arr(), gen_arr(), gen_arr());
@@ -124,7 +133,7 @@ int QMax::GenerateRandom(int max){
 
 
 // if value dont exist return -1
-int QMax::findValueIndex(int value){
+int QMaxNew::findValueIndex(int value){
     for(int i=0;i<_actualsize;i++){
         if(_A[i]==value){
             return i;
@@ -141,7 +150,7 @@ int QMax::findValueIndex(int value){
 
 // check if the conditions holds for the possible pivot "value"
 // return the pivot index in _A if it hold otherwise return -1
-int QMax::checkPivot(int value){
+int QMaxNew::checkPivot(int value){
 //     int index=0;
 //     int bigger=0;
 //     int smaller=0;
@@ -162,19 +171,19 @@ int QMax::checkPivot(int value){
     int left = 0, right = _actualsizeMinusOne;
     int pivot_idx = findValueIndex(value);
     
+    return pivot_idx;
     
-     if(pivot_idx==-1){
-        return -1;
-    }
-    
-    int new_pivot_idx = PartitionAroundPivot(left, right, pivot_idx, _A);
-    
-    if (_actualsize - new_pivot_idx <= _nminusq) {
-        if(new_pivot_idx >= _gamma*_q*_psi) {  // new_pivot_idx < _q - 1.
-            return new_pivot_idx;
-        }
-    }
-    return -1;
+//      if(pivot_idx==-1){
+//         return -1;
+//     }
+//     
+// //     int new_pivot_idx = PartitionAroundPivot(left, right, pivot_idx, _A);
+//     if (_actualsize - pivot_idx <= _nminusq) {
+//         if(pivot_idx >= _gamma*_q*_psi) {  // pivot_idx < _q - 1.
+//             return pivot_idx;
+//         }
+//     }
+//     return -1;
 }
 
 
@@ -187,17 +196,17 @@ int QMax::checkPivot(int value){
 
 
 
-int QMax::findKthLargestAndPivot(){
+int QMaxNew::findKthLargestAndPivot(){
     
-//     for(int i=0;i<100;i++){
-//         std::cout<<gen_arr()<<std::endl;
-//     }
+    _delta=_delta/2.0;
+    _K=ceil( ((_alpha*_gamma*(2+_gamma - _alpha*_gamma)) / (pow(_gamma -_alpha*_gamma,2))) * log(1/_delta));
+    _Z = (int)  ( (_K*(1+_gamma)) / (_alpha*_gamma) );
 
     int tries=2;
     while(tries!=0){
         // B should contain Z random values from _A
         std::priority_queue <int, std::vector<int>, std::greater<int> > p;
-       for(int i=0;i<_K;i++){
+        for(int i=0;i<_K;i++){
             int j=GenerateRandom(_actualsize);
             p.push(_A[j]);
         }
@@ -214,7 +223,6 @@ int QMax::findKthLargestAndPivot(){
         }
     
         
-        // check if the conditions holds for the possible pivot B[Kth_minimal_idx]
         int idx = checkPivot(top);
         if(idx!=-1){
             return _A[idx];   
@@ -237,7 +245,7 @@ int QMax::findKthLargestAndPivot(){
 	
 }
 
-void QMax::reset(){
+void QMaxNew::reset(){
 	_phi = -1;
 	_curIdx = _actualsize;
 }
